@@ -10,12 +10,19 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "kill-port": "^2.0.1"
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
+    "kill-port": "^2.0.1",
+    "prisma": "^7.8.0"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "dotenv": "^17.4.2",
+    "pg": "^8.20.0",
     "zod": "^3.22.4"
   }
 }
