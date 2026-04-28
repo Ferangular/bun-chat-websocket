@@ -6,7 +6,7 @@
   "scripts": {
     "kill-port": "for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :3200') do taskkill /PID %a /F",
     "start": "kill-port 3200 && bun src/index.ts",
-    "dev": "kill-port 3200 && bun --hot src/index.ts",
+    "dev": "kill-port 3200 && bun --hot src/index.ts && start http://localhost:3200",
     "seed": "bun seed/index.ts"
   },
   "devDependencies": {
