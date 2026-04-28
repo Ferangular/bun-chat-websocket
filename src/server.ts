@@ -97,34 +97,46 @@ export const createServer = () => {
         return response;
       }
 
-      //! Identificar nuestros clientes/usuarios
-      const cookies = new Bun.CookieMap(req.headers.get('Cookie') || '');
-      const jwt = cookies.get('X-Token');
-      if (!jwt) {
-        return new Response('Unauthorized', { status: 401 });
+      const url = new URL(req.url);
+      
+      // Only require JWT validation for WebSocket upgrade requests
+      if (url.searchParams.has('channelId')) {
+        //! Identificar nuestros clientes/usuarios
+        const cookies = new Bun.CookieMap(req.headers.get('Cookie') || '');
+        const jwt = cookies.get('X-Token');
+        if (!jwt) {
+          return new Response('Unauthorized', { status: 401 });
+        }
+
+        const { userId } = await validateJwtToken(jwt);
+        if (!userId) {
+          return new Response('Unauthorized', { status: 401 });
+        }
+
+        const user = await userService.getSenderById(userId);
+        if (!user) {
+          return new Response('Unauthorized', { status: 401 });
+        }
+
+        //* Identificar nuestros clientes
+        const clientId = generateUuid();
+        const upgraded = server.upgrade(req, {
+          data: { clientId, email: user.email, name: user.name, userId: user.id },
+        });
+
+        if (upgraded) {
+          return undefined;
+        }
+
+        return new Response('Upgrade failed', { status: 500 });
       }
 
-      const { userId } = await validateJwtToken(jwt);
-      if (!userId) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-
-      const user = await userService.getSenderById(userId);
-      if (!user) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-
-      //* Identificar nuestros clientes
-      const clientId = generateUuid();
-      const upgraded = server.upgrade(req, {
-        data: { clientId, email: user.email, name: user.name, userId: user.id },
+      // For regular HTTP requests, serve the HTML page
+      return new Response(indexHtml.toString(), {
+        headers: {
+          'Content-Type': 'text/html',
+        },
       });
-
-      if (upgraded) {
-        return undefined;
-      }
-
-      return new Response('Upgrade failed', { status: 500 });
     },
     websocket: {
       async open(ws) {
