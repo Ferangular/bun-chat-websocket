@@ -12,11 +12,23 @@
     <h1>Status</h1>
     <p id="status">Connecting</p>
 
+    <form id="login-form" style="margin-bottom: 20px">
+      <input type="email" id="input-email" placeholder="Email" />
+      <input type="password" id="input-password" placeholder="Password" />
+      <button id="btn-login">Login</button>
+    </form>
+
     <button id="btn-disconnect">Disconnect</button>
     <button id="btn-connect">Connect</button>
 
     <form id="message-form" style="display: none">
       <h1>Messages</h1>
+      <select id="select-receiver">
+        <option value="">Everyone</option>
+        <option value="1">Eve</option>
+        <option value="2">Bob</option>
+        <option value="3">Charlie</option>
+      </select>
       <input type="text" id="input-message" placeholder="Message" />
       <button id="send">Send</button>
     </form>
@@ -25,13 +37,13 @@
 
     <script>
       // Crear cookies
-      const session = {
-        id: 1,
-        sessionId: 'Abc123',
-      };
-      const jwtToken = 'MiToken-JWT';
-      document.cookie = `session=${JSON.stringify(session)}`;
-      document.cookie = `X-Token=${jwtToken}`;
+      // const session = {
+      //   id: 1,
+      //   sessionId: 'Abc123',
+      // };
+      // const jwtToken = 'MiToken-JWT';
+      // document.cookie = `session=${JSON.stringify(session)}`;
+      // document.cookie = `X-Token=${jwtToken}`;
 
       let socket;
 
@@ -42,6 +54,11 @@
 
       const btnDisconnect = document.querySelector('#btn-disconnect');
       const btnConnect = document.querySelector('#btn-connect');
+
+      const loginForm = document.querySelector('#login-form');
+      const inputEmail = document.querySelector('#input-email');
+      const inputPassword = document.querySelector('#input-password');
+      const btnLogin = document.querySelector('#btn-login');
 
       const createWebSocket = () => {
         const channelId = 'mi-canal-personalizado';
@@ -90,7 +107,15 @@
         event.preventDefault();
         if (!messageInput.value && messageInput.value.length === 0) return;
 
-        socket.send(messageInput.value);
+        const message = {
+          type: 'SEND_GROUP_MESSAGE', // TODO: SEND_DIRECT_MESSAGE
+          payload: {
+            content: messageInput.value,
+            // TODO: a quién le mandamos el mensaje
+          },
+        };
+
+        socket.send(JSON.stringify(message));
         // showMessage(messageInput.value);
         messageInput.value = '';
       });
@@ -101,6 +126,31 @@
 
         messagesContainer.prepend(pre);
       };
+
+      // Manejo del login
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!inputEmail.value && inputEmail.length === 0) return;
+        if (!inputPassword.value && inputPassword.length === 0) return;
+
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: inputEmail.value.trim(),
+            password: inputPassword.value,
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          alert(data.error);
+        }
+
+        console.log({ data });
+        document.cookie = `X-Token=${data.token}`;
+
+        socket = createWebSocket();
+      });
     </script>
   </body>
 </html>
