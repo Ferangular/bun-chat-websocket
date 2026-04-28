@@ -14,10 +14,18 @@ export const generateJwtToken = async (userId: string) => {
   return token;
 };
 
-export const validateJwtToken = async (token: string) => {
+// export const validateJwtToken = async (token: string) => {
+//   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+//
+//   const { payload } = await jose.jwtVerify(token, secret);
+//
+//   return payload;
+// };
+
+export const validateJwtToken = async (token: string): Promise<JwtPayload> => {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-  const { payload } = await jose.jwtVerify(token, secret);
+  const { payload } = await jose.jwtVerify<JwtPayload>(token, secret);
 
   return payload;
 };
