@@ -98,7 +98,7 @@ export const createServer = () => {
       }
 
       const url = new URL(req.url);
-      
+
       // Only require JWT validation for WebSocket upgrade requests
       if (url.searchParams.has('channelId')) {
         //! Identificar nuestros clientes/usuarios
